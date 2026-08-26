@@ -1,0 +1,23 @@
+[
+    {
+        "turnuva": "3x3",
+        "ev_sahibi": "Marmara İşletme Fakültesi",
+        "deplasman": "Elit Akademi",
+        "ev_sahibi_skor": 23,
+        "deplasman_skor": 25
+    },
+    {
+        "turnuva": "3x3",
+        "ev_sahibi": "Marmara İşletme Fakültesi",
+        "deplasman": "Anadolu Yıldızları",
+        "ev_sahibi_skor": 33,
+        "deplasman_skor": 35
+    },
+    {
+        "turnuva": "3x3",
+        "ev_sahibi": "Elit Akademi",
+        "deplasman": "Anadolu Yıldızları",
+        "ev_sahibi_skor": 44,
+        "deplasman_skor": 47
+    }
+]
