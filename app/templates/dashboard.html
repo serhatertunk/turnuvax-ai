@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turnuvax AI - Yönetim Paneli</title>
+</head>
+<body>
+    <h1>Turnuvax AI Yönetim Paneli</h1>
+    <p>Turnuva kayıtları</p>
+
+    <button onclick="leadleriGetir()">Kayıtları Yenile</button>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>İsim</th>
+                <th>Telefon</th>
+                <th>Mesaj</th>
+                <th>Tarih</th>
+            </tr>
+        </thead>
+
+        <tbody id="leadler">
+        </tbody>
+    </table>
+
+    <script>
+        async function leadleriGetir() {
+            try {
+                const response = await fetch("/api/leads");
+                const data = await response.json();
+
+                if (!data.basari) {
+                    return;
+                }
+
+                const tablo = document.getElementById("leadler");
+                tablo.innerHTML = "";
+
+                data.leadler.forEach(lead => {
+                    const satir = document.createElement("tr");
+
+                    satir.innerHTML = `
+                        <td>${lead.id}</td>
+                        <td>${lead.isim}</td>
+                        <td>${lead.telefon}</td>
+                        <td>${lead.mesaj}</td>
+                        <td>${lead.tarih}</td>
+                    `;
+
+                    tablo.appendChild(satir);
+                });
+
+            } catch (hata) {
+                console.error("Leadler alınamadı:", hata);
+            }
+        }
+
+        leadleriGetir();
+    </script>
+</body>
+</html>

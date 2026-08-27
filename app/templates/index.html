@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turnuvax AI</title>
+</head>
+<body>
+    <h1>Turnuvax AI</h1>
+    <p>Basketbol turnuvaları için yapay zekâ asistanı.</p>
+
+    <h2>AI Asistan</h2>
+
+    <input
+        type="text"
+        id="mesaj"
+        placeholder="Sorunuzu yazın..."
+    >
+
+    <button onclick="sor()">Sor</button>
+
+    <p id="cevap"></p>
+
+    <hr>
+
+    <h2>İletişim Bilgileriniz</h2>
+
+    <input
+        type="text"
+        id="isim"
+        placeholder="Adınız"
+    >
+
+    <input
+        type="tel"
+        id="telefon"
+        placeholder="Telefon numaranız"
+    >
+
+    <button onclick="kaydet()">Kaydet</button>
+
+    <p id="kayitSonucu"></p>
+
+    <script>
+        async function sor() {
+            const mesaj = document.getElementById("mesaj").value;
+
+            if (!mesaj) {
+                document.getElementById("cevap").textContent =
+                    "Lütfen bir soru yazın.";
+                return;
+            }
+
+            const response = await fetch("/api/sohbet", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    mesaj: mesaj
+                })
+            });
+
+            const data = await response.json();
+
+            document.getElementById("cevap").textContent =
+                data.basari ? data.cevap : data.hata;
+        }
+
+        async function kaydet() {
+            const isim = document.getElementById("isim").value;
+            const telefon = document.getElementById("telefon").value;
+            const mesaj = document.getElementById("mesaj").value;
+
+            const response = await fetch("/api/leads", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    isim: isim,
+                    telefon: telefon,
+                    mesaj: mesaj
+                })
+            });
+
+            const data = await response.json();
+
+            document.getElementById("kayitSonucu").textContent =
+                data.basari
+                    ? "Bilgileriniz başarıyla kaydedildi."
+                    : data.hata;
+        }
+    </script>
+</body>
+</html>
