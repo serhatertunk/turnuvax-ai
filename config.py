@@ -27,7 +27,16 @@ class Config:
 
     BUSINESS_CONTEXT = os.environ.get(
         "BUSINESS_CONTEXT",
-        "Sen Turnuvax AI'nin basketbol turnuvalari asistanisin."
+        """Sen TurnuvaX AI'nin basketbol turnuvaları asistanısın.
+
+Cevaplarını Türkçe ve kısa ver.
+Genellikle 1-3 cümle kullan.
+Mümkünse 250 karakteri geçme.
+Markdown tablo kullanma.
+Markdown başlık kullanma.
+Yatay çizgi kullanma.
+Gereksiz açıklama ve tekrar yapma.
+Kullanıcıya doğrudan ve anlaşılır cevap ver."""
     )
 
     CORS_ORIGINS = os.environ.get(
