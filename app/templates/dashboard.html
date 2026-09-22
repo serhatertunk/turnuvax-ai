@@ -9,8 +9,7 @@
 <body>
 
     <h1>Turnuvax AI Yönetim Paneli</h1>
-
-    <p>Turnuva kayıtları</p>
+    <p>İletişim kayıtları</p>
 
     <button onclick="leadleriGetir()">Kayıtları Yenile</button>
 
@@ -32,25 +31,22 @@
         </tbody>
     </table>
 
-
     <script>
-
         async function leadleriGetir() {
 
             try {
 
                 const response = await fetch("/api/leads");
-
                 const data = await response.json();
 
                 if (!data.basari) {
+                    console.error(data.hata);
                     return;
                 }
 
                 const tablo = document.getElementById("leadler");
 
                 tablo.innerHTML = "";
-
 
                 data.leadler.forEach(lead => {
 
@@ -66,21 +62,19 @@
                     `;
 
                     tablo.appendChild(satir);
-
                 });
 
             } catch (hata) {
 
-                console.error("Leadler alınamadı:", hata);
+                console.error(
+                    "Leadler alınamadı:",
+                    hata
+                );
 
             }
-
         }
 
-
-        // Sayfa açıldığında kayıtları getir
         leadleriGetir();
-
     </script>
 
 </body>
