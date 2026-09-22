@@ -1,102 +1,117 @@
-import sqlite3
+from flask import Blueprint, jsonify, render_template, request
 
-from flask import current_app, g
-
-
-def get_db():
-    """Mevcut uygulama için SQLite bağlantısını oluşturur."""
-    if "db" not in g:
-        database_url = current_app.config.get(
-            "DATABASE_URL",
-            "sqlite:///turnuvax.db"
-        )
-
-        if database_url.startswith("sqlite:///"):
-            database_path = database_url.replace(
-                "sqlite:///",
-                "",
-                1
-            )
-        else:
-            database_path = "turnuvax.db"
-
-        g.db = sqlite3.connect(database_path)
-        g.db.row_factory = sqlite3.Row
-
-    return g.db
+from app.database import lead_ekle, tum_leadler
+from app.services.ai_service import AIServiceError, ai_service
 
 
-def close_db(exception=None):
-    """İstek sonunda açık veritabanı bağlantısını kapatır."""
-    db = g.pop("db", None)
+# Kullanıcıya gösterilen sayfalar için Blueprint.
+pages_bp = Blueprint("pages", __name__)
 
-    if db is not None:
-        db.close()
-
-
-def init_db(app):
-    """Leads tablosunu oluşturur ve gerekli sütunları ekler."""
-    with app.app_context():
-        db = get_db()
-
-        # Tablo yoksa oluştur.
-        db.execute(
-            """
-            CREATE TABLE IF NOT EXISTS leads (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                isim TEXT NOT NULL,
-                mail TEXT,
-                telefon TEXT NOT NULL,
-                mesaj TEXT,
-                tarih TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-
-        # Eski tabloda mail sütunu yoksa ekle.
-        columns = db.execute(
-            "PRAGMA table_info(leads)"
-        ).fetchall()
-
-        column_names = [column["name"] for column in columns]
-
-        if "mail" not in column_names:
-            db.execute(
-                "ALTER TABLE leads ADD COLUMN mail TEXT"
-            )
-
-        db.commit()
-
-    app.teardown_appcontext(close_db)
+# API işlemleri için Blueprint.
+api_bp = Blueprint("api", __name__)
 
 
-def lead_ekle(isim, mail, telefon, mesaj):
+@pages_bp.route("/")
+def index():
+    """Ana karşılama sayfasını gösterir."""
+    return render_template("index.html")
+
+
+@pages_bp.route("/dashboard")
+def dashboard():
+    """Yönetim panelini gösterir."""
+    return render_template("dashboard.html")
+
+
+@api_bp.route("/sohbet", methods=["POST"])
+def sohbet():
+    """Kullanıcı mesajını AI servisine gönderir."""
+    veri = request.get_json(silent=True) or {}
+    mesaj = veri.get("mesaj", "").strip()
+    gecmis = veri.get("gecmis", [])
+
+    if not mesaj:
+        return jsonify({
+            "basari": False,
+            "hata": "Mesaj alanı boş olamaz."
+        }), 400
+
+    try:
+        cevap = ai_service.yanit_uret(mesaj, gecmis)
+
+        return jsonify({
+            "basari": True,
+            "cevap": cevap
+        })
+
+    except AIServiceError:
+        return jsonify({
+            "basari": False,
+            "hata": "Yapay zekâ servisine şu anda ulaşılamıyor."
+        }), 503
+
+
+@api_bp.route("/leads", methods=["POST"])
+def lead_olustur():
     """Yeni iletişim kaydı oluşturur."""
-    db = get_db()
+    veri = request.get_json(silent=True) or {}
 
-    cursor = db.execute(
-        """
-        INSERT INTO leads (isim, mail, telefon, mesaj)
-        VALUES (?, ?, ?, ?)
-        """,
-        (isim, mail, telefon, mesaj)
-    )
+    isim = veri.get("isim", "").strip()
+    mail = veri.get("mail", "").strip()
+    telefon = veri.get("telefon", "").strip()
+    mesaj = veri.get("mesaj", "").strip()
 
-    db.commit()
+    if not isim or not mail or not telefon:
+        return jsonify({
+            "basari": False,
+            "hata": "İsim, mail ve telefon zorunludur."
+        }), 400
 
-    return cursor.lastrowid
+    try:
+        lead_id = lead_ekle(
+            isim,
+            mail,
+            telefon,
+            mesaj
+        )
+
+        return jsonify({
+            "basari": True,
+            "id": lead_id
+        }), 201
+
+    except Exception:
+        return jsonify({
+            "basari": False,
+            "hata": "Kayıt oluşturulurken bir hata oluştu."
+        }), 500
 
 
-def tum_leadler():
-    """Lead kayıtlarını yeniden eskiye doğru getirir."""
-    db = get_db()
+@api_bp.route("/leads", methods=["GET"])
+def leadleri_getir():
+    """Tüm iletişim kayıtlarını getirir."""
+    try:
+        kayitlar = tum_leadler()
 
-    cursor = db.execute(
-        """
-        SELECT id, isim, mail, telefon, mesaj, tarih
-        FROM leads
-        ORDER BY tarih DESC, id DESC
-        """
-    )
+        leadler = [
+            {
+                "id": kayit["id"],
+                "isim": kayit["isim"],
+                "mail": kayit["mail"],
+                "telefon": kayit["telefon"],
+                "mesaj": kayit["mesaj"],
+                "tarih": kayit["tarih"]
+            }
+            for kayit in kayitlar
+        ]
 
-    return cursor.fetchall()
+        return jsonify({
+            "basari": True,
+            "leadler": leadler
+        })
+
+    except Exception:
+        return jsonify({
+            "basari": False,
+            "hata": "Kayıtlar alınırken bir hata oluştu."
+        }), 500
