@@ -11,7 +11,6 @@ def get_db():
             "sqlite:///turnuvax.db"
         )
 
-        # SQLite bağlantısı için dosya yolunu belirle.
         if database_url.startswith("sqlite:///"):
             database_path = database_url.replace(
                 "sqlite:///",
@@ -36,15 +35,17 @@ def close_db(exception=None):
 
 
 def init_db(app):
-    """Leads tablosunu yoksa oluşturur."""
+    """Leads tablosunu oluşturur ve gerekli sütunları ekler."""
     with app.app_context():
         db = get_db()
 
+        # Tablo yoksa oluştur.
         db.execute(
             """
             CREATE TABLE IF NOT EXISTS leads (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 isim TEXT NOT NULL,
+                mail TEXT,
                 telefon TEXT NOT NULL,
                 mesaj TEXT,
                 tarih TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -52,21 +53,33 @@ def init_db(app):
             """
         )
 
+        # Eski tabloda mail sütunu yoksa ekle.
+        columns = db.execute(
+            "PRAGMA table_info(leads)"
+        ).fetchall()
+
+        column_names = [column["name"] for column in columns]
+
+        if "mail" not in column_names:
+            db.execute(
+                "ALTER TABLE leads ADD COLUMN mail TEXT"
+            )
+
         db.commit()
 
     app.teardown_appcontext(close_db)
 
 
-def lead_ekle(isim, telefon, mesaj):
-    """Yeni bir lead kaydeder."""
+def lead_ekle(isim, mail, telefon, mesaj):
+    """Yeni iletişim kaydı oluşturur."""
     db = get_db()
 
     cursor = db.execute(
         """
-        INSERT INTO leads (isim, telefon, mesaj)
-        VALUES (?, ?, ?)
+        INSERT INTO leads (isim, mail, telefon, mesaj)
+        VALUES (?, ?, ?, ?)
         """,
-        (isim, telefon, mesaj)
+        (isim, mail, telefon, mesaj)
     )
 
     db.commit()
@@ -80,7 +93,7 @@ def tum_leadler():
 
     cursor = db.execute(
         """
-        SELECT id, isim, telefon, mesaj, tarih
+        SELECT id, isim, mail, telefon, mesaj, tarih
         FROM leads
         ORDER BY tarih DESC, id DESC
         """
