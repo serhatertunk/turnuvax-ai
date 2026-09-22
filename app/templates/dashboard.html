@@ -4,52 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Turnuvax AI - Yönetim Paneli</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 30px;
-        }
-
-        h1 {
-            margin-bottom: 5px;
-        }
-
-        button {
-            padding: 10px 15px;
-            margin: 15px 0;
-            cursor: pointer;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-        }
-
-        th {
-            background: #f2f2f2;
-        }
-    </style>
 </head>
 
 <body>
 
     <h1>Turnuvax AI Yönetim Paneli</h1>
 
-    <p>İletişim formundan gelen kayıtlar</p>
+    <p>Turnuva kayıtları</p>
 
-    <button onclick="leadleriGetir()">
-        Kayıtları Yenile
-    </button>
+    <button onclick="leadleriGetir()">Kayıtları Yenile</button>
 
-    <table>
+    <br><br>
+
+    <table border="1">
         <thead>
             <tr>
                 <th>ID</th>
@@ -65,6 +32,7 @@
         </tbody>
     </table>
 
+
     <script>
 
         async function leadleriGetir() {
@@ -76,37 +44,25 @@
                 const data = await response.json();
 
                 if (!data.basari) {
-
-                    console.error(
-                        "Kayıtlar alınamadı:",
-                        data.hata
-                    );
-
                     return;
                 }
 
-                const tablo =
-                    document.getElementById("leadler");
+                const tablo = document.getElementById("leadler");
 
                 tablo.innerHTML = "";
 
+
                 data.leadler.forEach(lead => {
 
-                    const satir =
-                        document.createElement("tr");
+                    const satir = document.createElement("tr");
 
                     satir.innerHTML = `
                         <td>${lead.id}</td>
-
-                        <td>${lead.isim || ""}</td>
-
+                        <td>${lead.isim}</td>
                         <td>${lead.mail || ""}</td>
-
-                        <td>${lead.telefon || ""}</td>
-
+                        <td>${lead.telefon}</td>
                         <td>${lead.mesaj || ""}</td>
-
-                        <td>${lead.tarih || ""}</td>
+                        <td>${lead.tarih}</td>
                     `;
 
                     tablo.appendChild(satir);
@@ -115,15 +71,14 @@
 
             } catch (hata) {
 
-                console.error(
-                    "Leadler alınamadı:",
-                    hata
-                );
+                console.error("Leadler alınamadı:", hata);
 
             }
+
         }
 
-        // Sayfa açıldığında kayıtları getir.
+
+        // Sayfa açıldığında kayıtları getir
         leadleriGetir();
 
     </script>
